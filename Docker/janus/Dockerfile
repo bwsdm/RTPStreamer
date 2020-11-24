@@ -22,16 +22,19 @@ RUN apt-get -y update && \
     build-essential \
     wget \
     git \
-    python3 \
-    python3-pip \
-    python3-setuptools \
-    python3-wheel \
-    ninja-build \
+    libnice-dev \
+    librabbitmq-dev \
     gtk-doc-tools && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-ENV PATH "$PATH:/usr/local/bin"
+RUN cd /tmp && \
+  wget https://github.com/Kitware/CMake/releases/download/v3.16.5/cmake-3.16.5.tar.gz && \
+  tar -zxvf cmake-3.16.5.tar.gz && \
+  cd cmake-3.16.5 && \
+  ./bootstrap && \
+  make && \
+  make install
 
 RUN cd /tmp && \
   wget https://github.com/cisco/libsrtp/archive/v2.3.0.tar.gz && \
@@ -42,37 +45,23 @@ RUN cd /tmp && \
   make install
 
 RUN cd /tmp && \
-  git clone https://gitlab.freedesktop.org/libnice/libnice && \
-  cd libnice && \
-  meson builddir && meson compile
-
-RUN cd /tmp && \
   git clone https://github.com/sctplab/usrsctp && \
   cd usrsctp && \
   ./bootstrap && \
   ./configure --prefix=/usr && make && make install
 
 RUN cd /tmp && \
-  git clone https://github.com/warmcat/libwebsockets.git \
-  cd libwebsockets \
-  mkdir build \
-  cd build \
-  cmake -DLWS_MAX_SMP=1 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. \
-  make && sudo make install
+  git clone https://github.com/warmcat/libwebsockets.git && \
+  cd libwebsockets && \
+  mkdir build && \
+  cd build && \
+  cmake -DLWS_MAX_SMP=1 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
+  make && make install
 
 RUN cd /tmp && \
-  git clone https://github.com/eclipse/paho.mqtt.c.git \
-  cd paho.mqtt.c \
-  sudo prefix=/usr make install
-
-RUN cd /tmp && \
-  git clone https://github.com/alanxz/rabbitmq-c \
-  cd rabbitmq-c \
-  git submodule init \
-  git submodule update \
-  mkdir build && cd build \
-  cmake -DCMAKE_INSTALL_PREFIX=/usr .. \
-  make && sudo make install
+  git clone https://github.com/eclipse/paho.mqtt.c.git && \
+  cd paho.mqtt.c && \
+  prefix=/usr make install
 
 RUN git clone https://github.com/meetecho/janus-gateway.git && \
   cd janus-gateway && \
