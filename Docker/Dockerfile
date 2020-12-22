@@ -24,6 +24,8 @@ RUN apt-get -y update && \
     git \
     libnice-dev \
     librabbitmq-dev \
+    nginx \
+    vim-tiny \
     gtk-doc-tools && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
@@ -66,7 +68,17 @@ RUN cd /tmp && \
 RUN git clone https://github.com/meetecho/janus-gateway.git && \
   cd janus-gateway && \
   sh autogen.sh && \
-  ./configure --prefix=/usr/local && \
+  ./configure --prefix=/opt/janus --disable-rabbitmq --disable-mqtt && \
   make && \
   make install && \
   make configs
+
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80 7088 8088 8188 8089
+EXPOSE 10000-10200/udp
+
+CMD ["nginx", "-g", "daemon off;"]
+
+RUN cd /opt/janus/bin && \
+  ./janus -F /opt/janus/etc/janus --daemon -L logfile.txt
